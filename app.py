@@ -18,6 +18,8 @@ mt = dlt.TranslationModel(BASE_DIR + "/cached_model_m2m100", model_family="m2m10
 
 key_sign = "Today I want to eat noodle."
 
+lang_code_map = dlt.utils.get_lang_code_map('m2m100')
+
 def cut_sent(para):
     para = re.sub('([。！？\?])([^”’])', r"\1\n\2", para)
     para = re.sub('(\.{6})([^”’])', r"\1\n\2", para)
@@ -31,6 +33,12 @@ def GenerateHmacSign(str):
     digest_maker.update(str.encode('utf-8'))
     digest = digest_maker.digest()
     return base64.b64encode(digest).decode('utf-8')
+
+def find_code(lang):
+    for key in lang_code_map:
+        if key == lang:
+            return lang_code_map[key]
+    return "en"
 
 # 切分句子
 @app.route('/tokenize', methods=['POST'])
@@ -98,7 +106,9 @@ def translate():
                 content = cut_sent(content)
             else:
                 content = nltk.tokenize.sent_tokenize(content)
-            str_arr = mt.translate(content, source=source, target=target)
+            src_code = find_code(source)
+            des_code = find_code(target)
+            str_arr = mt.translate(content, source=src_code, target=des_code)
             ret["code"] = 200
             ret["msg"] = "success"
             ret["data"] = "".join(str_arr)
