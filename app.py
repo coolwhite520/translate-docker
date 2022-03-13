@@ -9,6 +9,8 @@ import hashlib
 import hmac
 import base64
 import time
+from zhconv import convert
+
 
 app = Flask(__name__)
 
@@ -28,9 +30,9 @@ def cut_sent(para):
     para = para.rstrip()
     return para.split("\n")
 
-def GenerateHmacSign(str):
+def GenerateHmacSign(str_old):
     digest_maker = hmac.new(key_sign.encode('utf-8'), b'', digestmod='sha1')
-    digest_maker.update(str.encode('utf-8'))
+    digest_maker.update(str_old.encode('utf-8'))
     digest = digest_maker.digest()
     return base64.b64encode(digest).decode('utf-8')
 
@@ -50,15 +52,15 @@ def tokenize():
             data = json.loads(a)
             content = data['content']
             src_lang = data['src_lang']
-            list = []
+            arr_list = []
             content = content.split('\n\n')
             if src_lang == "Chinese":
                 for item in content:
-                    list.append(cut_sent(item))
+                    arr_list.append(cut_sent(item))
             else:
                 for item in content:
-                    list.append(nltk.tokenize.sent_tokenize(item))
-            ret["list"] = list
+                    arr_list.append(nltk.tokenize.sent_tokenize(item))
+            ret["list"] = arr_list
             ret["code"] = 200
             ret["msg"] = "success"
             return jsonify(ret)
@@ -88,8 +90,8 @@ def translate():
             content = data['content']
             timestamp = data['timestamp']
             sign = data['sign']
-            str = "src_lang={0}&des_lang={1}&content={2}&timestamp={3}".format(source, target, content, timestamp)
-            signMe = GenerateHmacSign(str)
+            str_format = "src_lang={0}&des_lang={1}&content={2}&timestamp={3}".format(source, target, content, timestamp)
+            signMe = GenerateHmacSign(str_format)
             if signMe != sign:
                 ret["code"] = -1001
                 ret["msg"] = "验证签名错误"
@@ -109,9 +111,13 @@ def translate():
             src_code = find_code(source)
             des_code = find_code(target)
             str_arr = mt.translate(content, source=src_code, target=des_code)
+            trans_content = "".join(str_arr)
+            if target == "zh":
+                # 发现繁体就转换为简体
+                trans_content = convert(trans_content, 'zh-cn')
             ret["code"] = 200
             ret["msg"] = "success"
-            ret["data"] = "".join(str_arr)
+            ret["data"] = trans_content
             return jsonify(ret)
         except Exception as e:
             ret["code"] = -1002
