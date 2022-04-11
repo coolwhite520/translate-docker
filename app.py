@@ -27,8 +27,9 @@ def cut_sent(para):
     para = re.sub('(\.{6})([^”’])', r"\1\n\2", para)
     para = re.sub('(\…{2})([^”’])', r"\1\n\2", para)
     para = re.sub('([。！？\?][”’])([^，。！？\?])', r'\1\n\2', para)
-    para = para.rstrip()
-    return para.split("\n")
+    para = para.strip()
+    arr = para.split("\n")
+    return filter(lambda item: len(item.strip()) > 0, arr)
 
 def GenerateHmacSign(str_old):
     digest_maker = hmac.new(key_sign.encode('utf-8'), b'', digestmod='sha1')
@@ -135,6 +136,16 @@ def hello():
 
 
 if __name__ == '__main__':
+#     ls = cut_sent("""文本：极品婆婆逼着我跟老公离婚，只因我不同意将娘家拆迁，分到的两套房给一套小叔子。
+#
+# 这一切就发生在晚饭时分。
+#
+# 那会儿我还在厨房里炒菜，婆婆就招呼小叔子一家子吃起来了。
+#
+# 老公心疼我，让我炒完这盘菜，赶紧入座吃饭，就怕买回来的半只烧鹅一点都不给我留。""")
+#
+#     new_list = filter(lambda item: len(item.strip()) > 0 , ls )
+#     print([item for item in new_list])
     app.run(host="0.0.0.0", port=5000, threaded=True)
 #     s = GenerateHmacSign("我爱你中国")
 #     print(s)
