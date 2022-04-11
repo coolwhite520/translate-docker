@@ -29,7 +29,8 @@ def cut_sent(para):
     para = re.sub('([。！？\?][”’])([^，。！？\?])', r'\1\n\2', para)
     para = para.strip()
     arr = para.split("\n")
-    return filter(lambda item: len(item.strip()) > 0, arr)
+    ls = filter(lambda item: item and isinstance(item, str) and len(item.strip()) > 0, arr)
+    return [item for item in ls]
 
 def GenerateHmacSign(str_old):
     digest_maker = hmac.new(key_sign.encode('utf-8'), b'', digestmod='sha1')
